@@ -5,7 +5,7 @@ Cada celda del notebook se convierte en una o varias diapositivas. El resultado
 es una carpeta que contiene el PDF compilado, el código fuente `.tex` editable
 y un directorio `assets/` con todas las figuras embebidas.
 
-Aquí comparamos dos resultados del proyecto:
+Aquí se demuestra un ejemplo de conversión:
 
 <div style="display: flex; align-items: center; gap: 15px;">
   <img src="./example_0.png" width="250" alt="Versión 1" />
