@@ -178,7 +178,7 @@ Celda 4  [Markdown]  ## Tema B
 ## 2. Uso
 
 ```bash
-python3 convert_ipynb_to_beamer_CLAUDE.py <notebook> [opciones]
+python3 convert_ipynb_to_beamer.py <notebook> [opciones]
 ```
 
 ### Argumento posicional
@@ -200,21 +200,21 @@ python3 convert_ipynb_to_beamer_CLAUDE.py <notebook> [opciones]
 Convertir un notebook usando la ubicación de salida por defecto:
 
 ```bash
-python3 convert_ipynb_to_beamer_CLAUDE.py metodos_numericos.ipynb
+python3 convert_ipynb_to_beamer.py metodos_numericos.ipynb
 # Salida: metodos_numericos/
 ```
 
 Especificar una carpeta de salida personalizada:
 
 ```bash
-python3 convert_ipynb_to_beamer_CLAUDE.py metodos_numericos.ipynb --out slides/
+python3 convert_ipynb_to_beamer.py metodos_numericos.ipynb --out slides/
 ```
 
 Conservar el directorio de trabajo temporal para inspeccionar el log de LaTeX
 tras un error:
 
 ```bash
-python3 convert_ipynb_to_beamer_CLAUDE.py metodos_numericos.ipynb --keep-workdir
+python3 convert_ipynb_to_beamer.py metodos_numericos.ipynb --keep-workdir
 ```
 
 ### Códigos de salida
