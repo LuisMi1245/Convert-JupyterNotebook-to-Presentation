@@ -325,26 +325,87 @@ def ascii_fallback(text: str) -> str:
     return unicodedata.normalize('NFKD', text.expandtabs(4)).encode('ascii', 'ignore').decode('ascii')
 
 
-def escape_latex_text(text: str) -> str:
-    text = re.sub(r'\s+', ' ', text).strip()
-    for old, new in {
-        '\\': r'\textbackslash{}',
-        '&': r'\&',
-        '%': r'\%',
-        '$': r'\$',
-        '#': r'\#',
-        '_': r'\_',
-        '{': r'\{',
-        '}': r'\}',
-        '~': r'\textasciitilde{}',
-        '^': r'\textasciicircum{}',
-    }.items():
+_LATEX_CHAR_TABLE = {
+    '\\': r'\textbackslash{}',
+    '&':  r'\&',
+    '%':  r'\%',
+    '$':  r'\$',
+    '#':  r'\#',
+    '_':  r'\_',
+    '{':  r'\{',
+    '}':  r'\}',
+    '~':  r'\textasciitilde{}',
+    '^':  r'\textasciicircum{}',
+}
+
+
+def _escape_latex_chars(text: str) -> str:
+    """Escapa los caracteres especiales de LaTeX *sin* alterar espacios."""
+    for old, new in _LATEX_CHAR_TABLE.items():
         text = text.replace(old, new)
     return text
 
 
+def escape_latex_text(text: str) -> str:
+    """Normaliza espacios y escapa los caracteres especiales de LaTeX."""
+    return _escape_latex_chars(re.sub(r'\s+', ' ', text).strip())
+
+
+_TITLE_SPAN_RE = re.compile(
+    r'(?P<math>\$\$?[^$\n]+?\$?\$)'   # $...$ o $$...$$ en una sola línea
+    r'|(?P<code>`[^`\n]+`)',           # `...`  código inline
+)
+
+
+def title_to_latex(text: str) -> str:
+    """Convierte el texto de un titular Markdown a una cadena LaTeX segura.
+
+    Trata cada segmento del titular de forma diferente:
+
+    * **Texto plano** → ``_escape_latex_chars()``  (escapa $, \\, {}, etc.
+      sin recortar espacios, que ya se normalizaron a nivel global).
+    * **Math inline** ``$...$`` → se pasa *tal cual* (ya es LaTeX válido).
+    * **Código inline** `` `...` `` → ``\\texttt{<inner escapado>}``
+
+    De esta forma un título como::
+
+        Ecuación del calor $\\Gamma(x)$  con `scipy.linalg.solve_banded`
+
+    se convierte en::
+
+        Ecuación del calor $\\Gamma(x)$  con \\texttt{scipy.linalg.solve\\_banded}
+
+    preservando el espacio antes de cada span.
+    """
+    # Normalización global de espacios (una sola vez, antes de segmentar)
+    text = re.sub(r'\s+', ' ', text).strip()
+    if not text:
+        return 'Diapositiva'
+
+    parts: list[str] = []
+    pos = 0
+    for m in _TITLE_SPAN_RE.finditer(text):
+        # Texto plano antes del span — escapar chars pero NO hacer strip
+        if m.start() > pos:
+            parts.append(_escape_latex_chars(text[pos:m.start()]))
+        if m.group('math'):
+            # Math span: sin tocar — ya es LaTeX válido
+            parts.append(m.group('math'))
+        else:
+            # Código inline: backticks → \texttt{inner escapado}
+            inner = m.group('code')[1:-1]          # quitar los backticks
+            parts.append(r'\texttt{' + _escape_latex_chars(inner) + '}')
+        pos = m.end()
+
+    # Texto plano tras el último span (o todo el texto si no hubo spans)
+    if pos < len(text):
+        parts.append(_escape_latex_chars(text[pos:]))
+
+    return ''.join(parts)
+
+
 def sanitize_title(text: str) -> str:
-    return escape_latex_text(text or 'Diapositiva')
+    return title_to_latex(text or 'Diapositiva')
 
 
 def find_image(path: str, nb_dir: Path) -> Path | None:
