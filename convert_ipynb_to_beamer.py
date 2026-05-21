@@ -971,7 +971,17 @@ def render_code_output_to_body(
     return None, saved_assets
 
 
-def build_tex(nb_path: Path, workdir: Path) -> tuple[str, list[Path]]:
+DEFAULT_CODE_TITLE   = 'Código Python'
+DEFAULT_OUTPUT_TITLE = 'Resultados numéricos'
+
+
+def build_tex(
+    nb_path: Path,
+    workdir: Path,
+    *,
+    code_title: str   = DEFAULT_CODE_TITLE,
+    output_title: str = DEFAULT_OUTPUT_TITLE,
+) -> tuple[str, list[Path]]:
     nb = nbformat.read(nb_path, as_version=4)
     nb_dir = nb_path.parent.resolve()
     asset_dir = workdir / 'assets'
@@ -1023,13 +1033,13 @@ def build_tex(nb_path: Path, workdir: Path) -> tuple[str, list[Path]]:
             code_body = '\n\n'.join([p for p in code_body_parts if p.strip()])
             if not code_body:
                 code_body = r'\centering\textit{Celda vacía}'
-            frames.append(frame('Código Python', code_body, fragile=True, allowbreaks=True))
+            frames.append(frame(code_title, code_body, fragile=True, allowbreaks=True))
 
             for out_idx, out in enumerate(cell.get('outputs', []), start=1):
                 body, assets = render_code_output_to_body(out, asset_dir, workdir, idx, out_idx)
                 saved_assets.extend(assets)
                 if body:
-                    frames.append(frame('Resultados numéricos', body, fragile=True, allowbreaks=True))
+                    frames.append(frame(output_title, body, fragile=True, allowbreaks=True))
 
     tex = BEAMER_PREAMBLE + '\n\\begin{document}\n' + '\n'.join(frames) + '\\end{document}\n'
     return tex, saved_assets
@@ -1050,6 +1060,18 @@ def main() -> None:
     ap.add_argument('--out', type=Path, default=None,
                     help='Output folder (default: <notebook_dir>/<notebook_stem>/)')
     ap.add_argument('--keep-workdir', action='store_true', help='Keep temporary build directory')
+    ap.add_argument(
+        '--code-title',
+        default=DEFAULT_CODE_TITLE,
+        metavar='TÍTULO',
+        help=f'Título para las diapositivas de código Python (por defecto: "{DEFAULT_CODE_TITLE}")',
+    )
+    ap.add_argument(
+        '--output-title',
+        default=DEFAULT_OUTPUT_TITLE,
+        metavar='TÍTULO',
+        help=f'Título para las diapositivas de resultados de ejecución (por defecto: "{DEFAULT_OUTPUT_TITLE}")',
+    )
     args = ap.parse_args()
 
     nb_path = args.notebook.resolve()
@@ -1065,7 +1087,7 @@ def main() -> None:
 
     workdir = Path(tempfile.mkdtemp(prefix='nb2beamer_', dir=str(out_dir)))
     try:
-        tex, _assets = build_tex(nb_path, workdir)
+        tex, _assets = build_tex(nb_path, workdir, code_title=args.code_title, output_title=args.output_title)
         tex_path = workdir / 'output.tex'
         tex_path.write_text(tex, encoding='utf-8')
         compile_pdf(tex_path)

@@ -101,9 +101,12 @@ visible en lugar de abortar la conversión.
 
 ### 1.3 Celdas de código: diapositivas de código y resultados
 
-Cada celda de código produce al menos una diapositiva **"Código Python"** con
-el código fuente resaltado sintácticamente. Cada salida asociada a esa celda
-genera una diapositiva separada de **"Resultados numéricos"**.
+Cada celda de código produce al menos una diapositiva con el código fuente
+resaltado sintácticamente. Cada salida asociada a esa celda genera una
+diapositiva separada de resultados. Los títulos de ambos tipos de diapositiva
+son **`"Código Python"`** y **`"Resultados numéricos"`** por defecto, y pueden
+cambiarse con las opciones `--code-title` y `--output-title`
+(ver [§ 2 Uso](#2-uso)).
 
 Tipos de salida soportados:
 
@@ -200,6 +203,8 @@ python3 convert_ipynb_to_beamer.py <notebook> [opciones]
 |---|---|---|
 | `--out RUTA` | `<directorio_notebook>/<nombre_notebook>/` | Ruta a la carpeta de salida. Se crea si no existe. |
 | `--keep-workdir` | desactivado | Conserva el directorio de trabajo temporal tras la ejecución. Útil para inspeccionar el log completo de LaTeX cuando ocurre un error de compilación. |
+| `--code-title TÍTULO` | `"Código Python"` | Título que aparece en las diapositivas generadas a partir de celdas de código Python. |
+| `--output-title TÍTULO` | `"Resultados numéricos"` | Título que aparece en las diapositivas generadas a partir de las salidas de ejecución de celdas de código. |
 | `-h` / `--help` | — | Muestra la ayuda y termina. |
 
 ### Ejemplos
@@ -222,6 +227,14 @@ tras un error:
 
 ```bash
 python3 convert_ipynb_to_beamer.py metodos_numericos.ipynb --keep-workdir
+```
+
+Personalizar los títulos de las diapositivas de código y de resultados:
+
+```bash
+python3 convert_ipynb_to_beamer.py metodos_numericos.ipynb \
+    --code-title "Implementación" \
+    --output-title "Salida del programa"
 ```
 
 ### Códigos de salida
